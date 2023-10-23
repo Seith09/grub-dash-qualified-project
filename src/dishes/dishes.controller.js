@@ -24,17 +24,19 @@ function create(req, res) {
 //============================================
 
 function read(req, res) {
-  res.json({ data: req.foundDish });
+  res.json({ data: res.locals.foundDish });
 }
 
 //============================================
 
 function update(req, res, next) {
   const { dishId } = req.params;
-  const { data: { id, name, description, price, image_url } } = req.body;
+  const {
+    data: { id, name, description, price, image_url },
+  } = req.body;
   const foundDish = dishes.find((dish) => dish.id === dishId);
-  
-  if (id !== undefined && id !== dishId && id !== null && id !== '') {
+
+  if (id !== undefined && id !== dishId && id !== null && id !== "") {
     return next({
       status: 400,
       message: `id ${id} does not match dishId ${dishId}`,
@@ -47,7 +49,6 @@ function update(req, res, next) {
   foundDish.image_url = image_url;
   res.json({ data: foundDish });
 }
-
 
 //============================================
 
@@ -76,7 +77,7 @@ function dishExists(req, res, next) {
   const foundDish = dishes.find((dish) => dish.id === dishId);
 
   if (foundDish) {
-    req.foundDish = foundDish;
+    res.locals.foundDish = foundDish;
     return next();
   }
   next({
@@ -99,7 +100,7 @@ function hasProperty(propertyName) {
     if (propertyName === "price") {
       const price = parseFloat(data.price);
 
-      if (isNaN(price) || typeof data.price !== 'number' || price < 0) {
+      if (isNaN(price) || typeof data.price !== "number" || price < 0) {
         return next({
           status: 400,
           message: "price must be a valid number",
@@ -128,7 +129,8 @@ module.exports = {
     hasProperty("description"),
     hasProperty("price"),
     hasProperty("image_url"),
-    update],
+    update,
+  ],
   delete: [dishExists, destroy],
   list,
 };

@@ -11,7 +11,7 @@ function create(req, res) {
     req.body;
 
   if (!Array.isArray(dishArray) || dishArray.length === 0) {
-    res.status(400).json({ error: 'dish' });
+    res.status(400).json({ error: "dish" });
     return;
   }
 
@@ -19,15 +19,19 @@ function create(req, res) {
 
   for (const dish of dishArray) {
     const index = dishArray.indexOf(dish);
-          
+
     if (!dish.quantity) {
-      res.status(400).json({ error: `Dish ${index} must have a quantity that is an integer greater than 0` });
-      return; 
+      res.status(400).json({
+        error: `Dish ${index} must have a quantity that is an integer greater than 0`,
+      });
+      return;
     }
 
     if (!Number.isInteger(dish.quantity) || dish.quantity <= 0) {
-      res.status(400).json({ error: `Dish ${index} must have a quantity that is an integer greater than 0` });
-      return; 
+      res.status(400).json({
+        error: `Dish ${index} must have a quantity that is an integer greater than 0`,
+      });
+      return;
     }
 
     const matchedDish = dishes.find((dataDish) => dataDish.id === dish.id);
@@ -57,17 +61,18 @@ function create(req, res) {
 
 //========================================
 
-
 function read(req, res) {
-  res.json({ data: req.foundOrder });
+  res.json({ data: res.locals.foundOrder });
 }
 
 //=========================================
 
 function update(req, res, next) {
   const { orderId } = req.params;
-  const { data: { id, deliverTo, mobileNumber, status, dishes } } = req.body;
-  
+  const {
+    data: { id, deliverTo, mobileNumber, status, dishes },
+  } = req.body;
+
   const foundOrder = orders.find((order) => order.id === orderId);
 
   if (!foundOrder) {
@@ -77,32 +82,48 @@ function update(req, res, next) {
     });
   }
 
-  if (id !== undefined && id !== orderId && id !== '' && id !== null) {
+  if (id !== undefined && id !== orderId && id !== "" && id !== null) {
     return next({
       status: 400,
       message: `id ${id} does not match orderId ${orderId}`,
     });
   }
-  
-  if(dishes.length <= 0 || !Array.isArray(dishes)){
+
+  if (dishes.length <= 0 || !Array.isArray(dishes)) {
     return next({
       status: 400,
       message: `dishes cannot be empty`,
     });
   }
-  
+
   const index = dishes.findIndex((dish, index) => {
-    return dish.quantity === undefined || !Number.isInteger(dish.quantity) || dish.quantity <= 0;
+    return (
+      dish.quantity === undefined ||
+      !Number.isInteger(dish.quantity) ||
+      dish.quantity <= 0
+    );
   });
-  
-  if (dishes.some((dish) => dish.quantity === undefined || dish.quantity === 0 || !Number.isInteger(dish.quantity))) {
+
+  if (
+    dishes.some(
+      (dish) =>
+        dish.quantity === undefined ||
+        dish.quantity === 0 ||
+        !Number.isInteger(dish.quantity)
+    )
+  ) {
     return next({
       status: 400,
       message: `Dish ${index} must have a quantity that is an integer greater than 0`,
     });
   }
-  
-  const validStatusValues = ["pending", "in-progress", "completed", "cancelled"];
+
+  const validStatusValues = [
+    "pending",
+    "in-progress",
+    "completed",
+    "cancelled",
+  ];
 
   if (!validStatusValues.includes(status)) {
     return next({
@@ -119,13 +140,12 @@ function update(req, res, next) {
   res.json({ data: foundOrder });
 }
 
-
 //=========================================
 
 function destroy(req, res, next) {
   const currentOrder = req.foundOrder;
 
-  if (currentOrder.status !== 'pending') {
+  if (currentOrder.status !== "pending") {
     return res.status(400).json({ error: 'Order status is not "pending".' });
   }
 
@@ -135,7 +155,7 @@ function destroy(req, res, next) {
     orders.splice(index, 1);
     res.sendStatus(204);
   } else {
-    res.status(405).json({ errors: 'DELETE' });
+    res.status(405).json({ errors: "DELETE" });
   }
 }
 
@@ -152,7 +172,7 @@ function orderExists(req, res, next) {
   const foundOrder = orders.find((order) => order.id === orderId);
 
   if (foundOrder) {
-    req.foundOrder = foundOrder;
+    res.locals.foundOrder = foundOrder;
     return next();
   }
   next({
@@ -204,11 +224,8 @@ module.exports = {
     hasProperty("mobileNumber"),
     hasProperty("dishes"),
     hasProperty("status"),
-    update
+    update,
   ],
-  delete: [
-    orderExists,
-    destroy
-  ],
+  delete: [orderExists, destroy],
   list,
 };
